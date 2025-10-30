@@ -1,0 +1,171 @@
+
+
+#   ██████╗ ████████╗████████╗███████╗██████╗                         
+#  ██╔═══██╗╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗                        
+#  ██║   ██║   ██║      ██║   █████╗  ██████╔╝█████╗                  
+#  ██║   ██║   ██║      ██║   ██╔══╝  ██╔══██╗╚════╝                  
+#  ╚██████╔╝   ██║      ██║   ███████╗██║  ██║                        
+#   ╚═════╝    ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝                        
+#  ██╗      █████╗ ██╗   ██╗███╗   ██╗ ██████╗██╗  ██╗███████╗██████╗ 
+#  ██║     ██╔══██╗██║   ██║████╗  ██║██╔════╝██║  ██║██╔════╝██╔══██╗
+#  ██║     ███████║██║   ██║██╔██╗ ██║██║     ███████║█████╗  ██████╔╝
+#  ██║     ██╔══██║██║   ██║██║╚██╗██║██║     ██╔══██║██╔══╝  ██╔══██╗
+#  ███████╗██║  ██║╚██████╔╝██║ ╚████║╚██████╗██║  ██║███████╗██║  ██║
+#  ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
+
+# Terminal shell script launcher, written in rust
+# Source Code: https://github.com/kuokuo123/otter-launcher
+
+# Recommended to be used in companion with sway-launcher-desktop to launch desktop applications
+# https://github.com/Biont/sway-launcher-desktop
+
+
+[general]
+default_module = "ds" # module to run when no prefix is matched
+empty_module = "app" # run with an empty prompt
+exec_cmd = "sh -c" # exec command of your shell
+# for example: "bach -c" for bash; "zsh -c" for zsh; also accept wm commands like "hyprctl dispatch exec"
+vi_mode = false # set true to use vi keybinds, false emacs keybinds
+esc_to_abort = true # useful for vi users
+cheatsheet_entry = "?" # when prompted, will show a list of configured modules
+cheatsheet_viewer = "less -R; clear" # command to show cheatsheet; through piping stdout
+clear_screen_after_execution = false
+loop_mode = false # don't quit after executing a module, useful with scratchpads
+external_editor = "nvim" # if set, press ctrl+e (or v in vi normal mode) to edit prompt in specified program
+delay_startup = 0 # sometimes the otter runs too fast even before the terminal window is ready; this slows it down by milliseconds; useful when chafa image is skewed
+#callback = "" # if set, will run after module execution; for example, calling swaymsg to adjust window size
+
+
+# ANSI color codes are allowed. However, \x1b should be replaced with \u001B, because the rust toml crate cannot read \x as an escaped character
+[interface]
+header = """
+ \u001B[34;1m󰣇 \u001B[0m $USER
+  \u001B[34;1m \u001B[0;1m """
+list_prefix = "    "
+selection_prefix = " \u001B[34;1m ▌ "
+indicator_with_arg_module = ""
+indicator_no_arg_module = ""
+place_holder = "type & search"
+default_module_message = "    \u001B[33msearch\u001B[0m the internet"
+suggestion_mode = "list"
+suggestion_lines = 4
+prefix_color = "\u001B[33m"
+prefix_padding = 3
+description_color = "\u001B[39m"
+place_holder_color = "\u001B[90m"
+hint_color = "\u001B[90m"
+move_interface_down = 1
+move_interface_right = 1
+
+[[modules]]
+description = "subreddits"
+prefix = "reddit"
+cmd = "xdg-open https://www.reddit.com/r/'{}'"
+with_argument = true
+url_encode = true
+unbind_proc = true
+
+[[modules]]
+description = "search youtube"
+prefix = "yt"
+cmd = "setsid -f xdg-open 'https://www.youtube.com/results?search_query={}'"
+with_argument = true
+url_encode = true
+unbind_proc = true
+
+# modules are defined as followed
+[[modules]]
+description = "duckduckgo search"
+prefix = "ds"
+cmd = "xdg-open https://www.duckduckgo.com/search?q='{}'" # try wm's exec command for unbinding if 'setsid -f' does not work as expected, eg. 'hyprctl dispatch exec'
+with_argument = true # if true, {} in cmd will be replaced with user input. if not explicitly set, taken as false.
+url_encode = true # should be true when calling webpages; this ensures special characters in url being readable to browsers; taken as false if not explicitly set
+unbind_proc = true # run cmd in a forked shell as opposed to as a child process; useful for launching gui programs; taken as false if not explicitly set
+
+# fzf is needed to run below functions
+[[modules]]
+description = "desktop programs"
+prefix = "app"
+cmd = """
+desktop_file() {
+find /usr/share/applications -name "*.desktop" 2>/dev/null
+find /usr/local/share/applications -name "*.desktop" 2>/dev/null
+find "$HOME/.local/share/applications" -name "*.desktop" 2>/dev/null
+find /var/lib/flatpak/exports/share/applications -name "*.desktop" 2>/dev/null
+find "$HOME/.local/share/flatpak/exports/share/applications" -name "*.desktop" 2>/dev/null
+}
+selected="$(desktop_file | sed 's/.desktop$//g' | sort | fzf --reverse --padding 1,3 --info-command 'echo -e " desktop apps ($FZF_POS/$FZF_TOTAL_COUNT)"' --cycle --gutter " " --pointer " ▌" --color "bg+:-1,pointer:1,info:8,separator:8,scrollbar:0" --prompt '  ' -m -d / --with-nth -1 )"
+[ -z "$selected" ] && exit
+echo "$selected" | while read -r line ; do setsid -f gtk-launch "$(basename $line)"; done
+"""
+
+[[modules]]
+description = "power menu (fzf)"
+prefix = "po"
+cmd = """
+function power {
+if [[ -n $1 ]]; then
+case $1 in
+"logout") session=`loginctl session-status | head -n 1 | awk '{print $1}'`; loginctl terminate-session $session ;;
+"suspend") systemctl suspend ;;
+"hibernate") systemctl hibernate ;;
+"reboot") systemctl reboot ;;
+"shutdown") systemctl poweroff ;;
+esac fi }
+power $(echo -e 'reboot\nshutdown\nlogout\nsuspend\nhibernate' | fzf --reverse --padding 1,2 --info-command 'printf " power menu ($FZF_POS/$FZF_TOTAL_COUNT)"' --cycle --gutter " " --pointer " ▌" --color "bg+:-1,pointer:1,info:8,separator:8,scrollbar:0" --prompt '  ' | tail -1)
+"""
+
+[[modules]]
+description = "run commands"
+prefix = "sh"
+cmd = """
+$(printf $TERM | sed 's/xterm-//g') -e sh -c "{}"
+"""
+with_argument = true
+unbind_proc = true
+
+[[modules]]
+description = "search archwiki"
+prefix = "aw"
+cmd = "xdg-open https://wiki.archlinux.org/index.php?search='{}'"
+with_argument = true
+url_encode = true
+unbind_proc = true
+
+[[modules]]
+description = "search packages"
+prefix = "pac"
+cmd = "xdg-open https://archlinux.org/packages/?q='{}'"
+with_argument = true
+url_encode = true
+unbind_proc = true
+
+[[modules]]
+description = "search the AUR"
+prefix = "aur"
+cmd = "xdg-open https://aur.archlinux.org/packages?K='{}'"
+with_argument = true
+url_encode = true
+unbind_proc = true
+
+[[modules]]
+description = "cambridge dict"
+prefix = "dc"
+cmd = "xdg-open 'https://dictionary.cambridge.org/dictionary/english/{}'"
+with_argument = true
+url_encode = true
+unbind_proc = true
+
+[[modules]]
+description = "open files (fzf)"
+prefix = "fo"
+cmd = """
+find $HOME -type f -not -path '*/.cache/*' 2>/dev/null | fzf --reverse --padding 1,3 --info-command 'printf " files ($FZF_POS/$FZF_TOTAL_COUNT)"' --cycle --gutter ' ' --pointer ' ▌' --color 'bg+:-1,pointer:1,info:8,separator:8,scrollbar:0' --prompt '  ' | setsid -f xargs -r -I [] xdg-open '[]'
+"""
+
+[[modules]]
+description = "open dirs (yazi)"
+prefix = "yz"
+cmd = """
+find $HOME -type d -not -path '*/.cache/*' 2>/dev/null | fzf --reverse --padding 1,3 --info-command 'printf " directories ($FZF_POS/$FZF_TOTAL_COUNT)"' --cycle --gutter ' ' --pointer ' ▌' --color 'bg+:-1,pointer:1,info:8,separator:8,scrollbar:0' --prompt '  ' | xargs -r -I [] setsid -f "$(echo $TERM | sed 's/xterm-//g')" -e yazi '[]'
+"""
