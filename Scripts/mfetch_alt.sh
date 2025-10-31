@@ -23,12 +23,12 @@ palette="[7m$c1 $c1 $c2 $c2 $c3 $c3 $c4 $c4 $c5 $c5 $c6 $c6 [m"
 
 # OUTPUT
 printf '%s\n' "
-    ${c5}     .-.         ${c6}os       ${c0}${PRETTY_NAME,,}
-    ${c5}  __/   (        ${c6}kernel   ${c0}${kernel,,}
-    ${c5}, '-.____\\       ${c6}pkgs   ${c0}  ${pkgs}
-    ${c5} u=='/  \\        ${c6}shell    ${c0}${SHELL##*/}
-    ${c5}    /_/  \\       ${c6}wm       ${c0}${wm,,}
-    ${c5}  .-''   |
-    ${c5} (  ${c6}____${c5}/${c6}_____   ${palette}
+ ${c5}      /\\         ${c6}os       ${c0}${PRETTY_NAME,,}
+ ${c5}     /  \\        ${c6}kernel   ${c0}${kernel,,}
+ ${c5}    /\\   \\       ${c6}pkgs   ${c0}  ${pkgs}
+ ${c5}   /      \\      ${c6}shell    ${c0}${SHELL##*/}
+ ${c5}  /   ''  _\\     ${c6}wm       ${c0}${wm,,}
+ ${c5} /   |  |   \\
+ ${c5}/_-''    ''-_\\   ${palette}
 "
 
