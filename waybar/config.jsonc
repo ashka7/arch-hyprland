@@ -1,0 +1,100 @@
+{
+    "reload_style_on_change": true,
+    "layer": "top",
+    "position": "top",
+    "spacing": 0,
+    "height": 32,
+    "modules-left": [
+	"hyprland/workspaces",
+	"hyprland/window"
+    ],
+    "modules-center": [
+	"clock"
+    ],
+    "modules-right": [
+	"group/expand",
+	"custom/spacer",
+	"pulseaudio",
+	"custom/spacer",
+	"network"
+    ],
+
+    "custom/spacer": {
+	"format": "⏽"
+    },
+
+  "hyprland/workspaces": {
+    "on-click": "activate",
+    "format": "{icon}",
+    "format-icons": {
+      "default": "",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "active": "󱓻"
+    },
+    "persistent-workspaces": {
+     "*": 5 
+    }
+  },
+
+  "hyprland/window": {
+    "format": "{title}",
+    "max-length": 40, 
+    "separate-outputs": false,
+    "rewrite": {
+	"^.*~$": "Foot"
+    }
+  },
+
+  "custom/expand": {
+    "format": "",
+    "tooltip": false
+  },
+
+  "group/expand": {
+    "orientation": "horizontal",
+    "drawer": {
+	"transition-duration": 600,
+	"transition-to-left": true,
+	"click-to-reveal": true
+    },
+    "modules": [
+	"custom/expand",
+	"tray"
+    ]
+  },
+
+  "tray": {
+    "icon-size": 12,
+    "spacing": 12
+  },
+
+  "pulseaudio": {
+      "format": "{volume}% {icon}",
+      "on-click": "foot -e wiremix",
+      "scroll-step": 5,
+      "format-muted": "",
+      "format-icons": {
+      "default": ["", "", ""]
+      }
+  },
+
+  "network": {
+    "format-icons": ["󰤯", "󰤟", "󰤢", "󰤥", "󰤨"],
+    "format-wifi": "{icon}   {essid} ({frequency} GHz)  ⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
+    "format-ethernet": "⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
+    "format-disconnected": "󰤮",
+    "interval": 3,
+    "spacing": 1,
+    "on-click": "foot -e impala",
+    "tooltip": false
+  }
+}
+
